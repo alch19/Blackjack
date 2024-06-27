@@ -11,7 +11,12 @@ public class Deck {
         int[] values = {2,3,4,5,6,7,8,9,10,11};
         for(String suit : suits) {
             for (int i=0; i<ranks.length; i++) {
-                cards.add(new Card(ranks[i], suit, values[i]));
+                if(i<9) {
+                    cards.add(new Card(ranks[i], suit, values[i]));
+                }
+                else {
+                    cards.add(new Card(ranks[i], suit, 11));
+                }
             }
         }
     }

@@ -11,6 +11,10 @@ public class Hand {
         cards.add(card);
     }
 
+    public ArrayList<Card> getCards() {
+        return this.cards;
+    }
+
     public int getValue() {
         int value = 0;
         int numAces = 0;
@@ -28,5 +32,18 @@ public class Hand {
         }
 
         return value;
+    }
+
+    public boolean isBust() {
+        return getValue() > 21;
+    }
+
+    public boolean isBlackjack() {
+        return getValue() == 21;
+    }
+    
+    @Override
+    public String toString() {
+        return cards.toString();
     }
 }
