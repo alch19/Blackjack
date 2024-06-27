@@ -15,7 +15,7 @@ public class Deck {
                     cards.add(new Card(ranks[i], suit, values[i]));
                 }
                 else {
-                    cards.add(new Card(ranks[i], suit, 11));
+                    cards.add(new Card(ranks[i], suit, 10));
                 }
             }
         }
