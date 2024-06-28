@@ -13,6 +13,9 @@ public class Game extends JFrame {
     private JPanel dealerHandPanel;
     private JButton hitButton;
     private JButton standButton;
+    private JLabel playerTotalValueLabel;
+    private JLabel dealerTotalValueLabel;
+
     private boolean dealerCardRevealed = false;
 
     public Game() {
@@ -40,8 +43,14 @@ public class Game extends JFrame {
         dealerHandPanel.setLayout(new FlowLayout());
         dealerHandPanel.setBorder(BorderFactory.createTitledBorder("Dealer Hand"));
 
+        playerTotalValueLabel = new JLabel("Player Total: 0");
+        dealerTotalValueLabel = new JLabel("Dealer Total: 0");
+
         handsPanel.add(playerHandPanel);
         handsPanel.add(dealerHandPanel);
+
+        playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
+        dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
         hitButton = new JButton("Hit");
         standButton = new JButton("Stand");
@@ -64,6 +73,12 @@ public class Game extends JFrame {
         buttonPanel.setLayout(new GridLayout(1, 2));
         buttonPanel.add(hitButton);
         buttonPanel.add(standButton);
+
+        playerTotalValueLabel = new JLabel("Player Total: 0");
+        dealerTotalValueLabel = new JLabel("Dealer Total: 0");
+        
+        playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
+        dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
         add(handsPanel, BorderLayout.WEST);
         add(buttonPanel, BorderLayout.SOUTH);
@@ -101,6 +116,12 @@ public class Game extends JFrame {
             dealerHandPanel.add(cardPanel);
         }
 
+        playerTotalValueLabel.setText("Player Total: " + playerHand.getValue());
+        dealerTotalValueLabel.setText("Dealer Total: " + (dealerCards.get(1).isHidden() ? dealerHand.getCards().get(0).getValue() : dealerHand.getValue()));
+
+        playerHandPanel.add(playerTotalValueLabel);
+        dealerHandPanel.add(dealerTotalValueLabel);
+
         playerHandPanel.revalidate();
         playerHandPanel.repaint();
         dealerHandPanel.revalidate();
@@ -124,6 +145,12 @@ public class Game extends JFrame {
             }
             dealerHandPanel.add(cardPanel);
         }
+
+        playerTotalValueLabel.setText("Player Total: " + playerHand.getValue());
+        dealerTotalValueLabel.setText("Dealer Total: " + dealerHand.getValue());
+
+        playerHandPanel.add(playerTotalValueLabel);
+        dealerHandPanel.add(dealerTotalValueLabel);
 
         playerHandPanel.revalidate();
         playerHandPanel.repaint();
