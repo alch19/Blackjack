@@ -5,10 +5,12 @@ public class CardPanel extends JPanel {
     private Card card;
     private boolean hidden;
 
-    private static final ImageIcon HEARTS_ICON = new ImageIcon("../images/hearts.png");
-    private static final ImageIcon DIAMONDS_ICON = new ImageIcon("../images/diamonds.png");
-    private static final ImageIcon CLUBS_ICON = new ImageIcon("../images/clubs.png");
-    private static final ImageIcon SPADES_ICON = new ImageIcon("../images/spades.png");
+    private static final Image HEARTS_ICON = new ImageIcon(("images/hearts.png")).getImage();
+    private static final Image DIAMONDS_ICON = new ImageIcon(("images/diamonds.png")).getImage();
+    private static final Image CLUBS_ICON = new ImageIcon(("images/clubs.png")).getImage();
+    private static final Image SPADES_ICON = new ImageIcon(("images/spades.png")).getImage();
+
+    private static final Font FONT = new Font("Arial", Font.BOLD, 18);
 
     public CardPanel(Card card) {
         this.card = card;
@@ -24,6 +26,7 @@ public class CardPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        g.setFont(FONT);
         if (hidden) {
             g.setColor(Color.GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
@@ -32,18 +35,24 @@ public class CardPanel extends JPanel {
             g.fillRect(0, 0, getWidth(), getHeight());
             g.setColor(Color.BLACK);
             g.drawRect(0, 0, getWidth(), getHeight());
-            g.drawString(card.getRank(), 10, 20);
-            ImageIcon suitIcon = getSuitIcon(card.getSuit());
-            if (suitIcon != null) {
-                int iconWidth = suitIcon.getIconWidth();
-                int iconHeight = suitIcon.getIconHeight();
+            g.drawString(card.getRank(), 7, 20);
+            Image suitImage = getSuitImage(card.getSuit());
+            if (suitImage != null) {
+                int iconWidth = suitImage.getWidth(this);
+                int iconHeight = suitImage.getHeight(this);
                 int x = (getWidth() - iconWidth) / 2;
                 int y = (getHeight() - iconHeight) / 2;
-                suitIcon.paintIcon(this, g, x, y);
+                g.drawImage(suitImage, x, y, this);
             }
+
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.translate(getWidth(), getHeight());
+            g2d.rotate(Math.toRadians(180));
+            g2d.drawString(card.getRank(), 7, 20);
+            g2d.dispose();
         }
     }
-    private ImageIcon getSuitIcon(String suit) {
+    private Image getSuitImage(String suit) {
         switch (suit) {
             case "Hearts":
                 return HEARTS_ICON;
