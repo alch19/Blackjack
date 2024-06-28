@@ -12,7 +12,7 @@ public class Card {
     public String getRank() {
         return this.rank;
     }
-    public String getsuit() {
+    public String getSuit() {
         return this.suit;
     }
     public int getValue() {

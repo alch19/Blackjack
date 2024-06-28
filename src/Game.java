@@ -2,13 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+
 
 public class Game extends JFrame {
     private Deck deck;
     private Hand playerHand;
     private Hand dealerHand;
-    private JTextArea playerHandText;
-    private JTextArea dealerHandText;
+    private JPanel playerHandPanel;
+    private JPanel dealerHandPanel;
     private JButton hitButton;
     private JButton standButton;
 
@@ -23,12 +25,13 @@ public class Game extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        playerHandText = new JTextArea();
-        playerHandText.setEditable(false);
-        playerHandText.setFocusable(false); 
-        dealerHandText = new JTextArea();
-        dealerHandText.setEditable(false);
-        dealerHandText.setFocusable(false); 
+        playerHandPanel = new JPanel();
+        playerHandPanel.setPreferredSize(new Dimension(600, 150));
+        playerHandPanel.setLayout(new FlowLayout());
+
+        dealerHandPanel = new JPanel();
+        dealerHandPanel.setPreferredSize(new Dimension(600, 150));
+        dealerHandPanel.setLayout(new FlowLayout());
 
         hitButton = new JButton("Hit");
         standButton = new JButton("Stand");
@@ -52,8 +55,8 @@ public class Game extends JFrame {
         panel.add(hitButton);
         panel.add(standButton);
 
-        add(new JScrollPane(playerHandText), BorderLayout.NORTH);
-        add(new JScrollPane(dealerHandText), BorderLayout.CENTER);
+        add(dealerHandPanel, BorderLayout.NORTH);
+        add(playerHandPanel, BorderLayout.CENTER);
         add(panel, BorderLayout.SOUTH);
 
         startGame();
@@ -71,13 +74,44 @@ public class Game extends JFrame {
     }
 
     private void updateUI() {
-        playerHandText.setText("Player Hand:\n" + playerHand + " (" +playerHand.getValue() + ")");
-        dealerHandText.setText("Dealer Hand:\n" + dealerHand.getCards().get(0) + " and [hidden]");
+        playerHandPanel.removeAll();
+        dealerHandPanel.removeAll();
+
+        for (Card card : playerHand.getCards()) {
+            playerHandPanel.add(new CardPanel(card));
+        }
+
+        List<Card> dealerCards = dealerHand.getCards();
+        for (int i = 0; i < dealerCards.size(); i++) {
+            CardPanel cardPanel = new CardPanel(dealerCards.get(i));
+            if (i == 1) {
+                cardPanel.setHidden(true);
+            }
+            dealerHandPanel.add(cardPanel);
+        }
+
+        playerHandPanel.revalidate();
+        playerHandPanel.repaint();
+        dealerHandPanel.revalidate();
+        dealerHandPanel.repaint();
     }
 
     private void updateUI(int i) {
-        playerHandText.setText("Player Hand:\n" + playerHand + " (" +playerHand.getValue() + ")");
-        dealerHandText.setText("Dealer Hand:\n" + dealerHand + " (" +dealerHand.getValue() + ")");
+        playerHandPanel.removeAll();
+        dealerHandPanel.removeAll();
+
+        for (Card card : playerHand.getCards()) {
+            playerHandPanel.add(new CardPanel(card));
+        }
+
+        for (Card card : dealerHand.getCards()) {
+            dealerHandPanel.add(new CardPanel(card));
+        }
+
+        playerHandPanel.revalidate();
+        playerHandPanel.repaint();
+        dealerHandPanel.revalidate();
+        dealerHandPanel.repaint();
     }
 
     private void playerHit() {
