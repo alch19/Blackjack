@@ -15,6 +15,9 @@ public class Game extends JFrame {
     private JButton standButton;
     private JLabel playerTotalValueLabel;
     private JLabel dealerTotalValueLabel;
+    private int balance = 1000;
+    private JLabel balanceLabel;
+    private int bet;
 
     private boolean dealerCardRevealed = false;
 
@@ -49,6 +52,10 @@ public class Game extends JFrame {
         handsPanel.add(playerHandPanel);
         handsPanel.add(dealerHandPanel);
 
+        balanceLabel = new JLabel("Balance: " + balance);
+        JPanel balancePanel = new JPanel();
+        balancePanel.add(balanceLabel);
+
         playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
         dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
@@ -80,6 +87,7 @@ public class Game extends JFrame {
         playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
         dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
+        add(balancePanel, BorderLayout.NORTH);
         add(handsPanel, BorderLayout.WEST);
         add(buttonPanel, BorderLayout.SOUTH);
 
@@ -87,7 +95,24 @@ public class Game extends JFrame {
     }
 
     private void startGame() {
+        String betInput = JOptionPane.showInputDialog(this, "How much would you like to bet?", "Place your bet (Balance: " + balance + ")", JOptionPane.PLAIN_MESSAGE);
+        try {
+            bet = Integer.parseInt(betInput);
+            if (bet <= 0 || bet > balance) {
+                JOptionPane.showMessageDialog(this, "Invalid bet amount. Please enter a value between 1 and your current balance.", "Invalid Bet", JOptionPane.ERROR_MESSAGE);
+                startGame();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.exit(0);
+            startGame();
+            return;
+        }
+
         deck.shuffle();
+
+        playerHand.clear();
+        dealerHand.clear();
 
         playerHand.addCard(deck.dealCard());
         playerHand.addCard(deck.dealCard());
@@ -165,7 +190,20 @@ public class Game extends JFrame {
 
         if (playerHand.isBust()) {
             JOptionPane.showMessageDialog(this, "Player busts! Dealer wins.");
-            resetGame();
+            balance-=bet;
+            balanceLabel.setText("Balance: " + balance);
+            if(outOfMoney()) {
+                int response = JOptionPane.showConfirmDialog(this, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (response == JOptionPane.YES_OPTION) {
+                    balance = 1000;
+                    balanceLabel.setText("Balance: " + balance);
+                    startGame();
+                } else {
+                    System.exit(0);
+                }
+            } else {
+                resetGame();
+            }
         }
     }
 
@@ -200,8 +238,6 @@ public class Game extends JFrame {
         updateUI();
     }
 
-
-
     private void determineOutcome() {
         int playerValue = playerHand.getValue();
         int dealerValue = dealerHand.getValue();
@@ -209,20 +245,37 @@ public class Game extends JFrame {
         String message;
         if (dealerHand.isBust() || (playerValue > dealerValue)) {
             message = "Player wins!";
+            balance+=bet;
         } else if (playerValue < dealerValue) {
             message = "Dealer wins!";
+            balance-=bet;
         } else {
             message = "It's a tie!";
         }
-
+        balanceLabel.setText("Balance: " + balance);
         JOptionPane.showMessageDialog(this, message);
-        resetGame();
+        if(outOfMoney()) {
+            int response = JOptionPane.showConfirmDialog(this, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.YES_OPTION) {
+                balance = 1000;
+                balanceLabel.setText("Balance: " + balance);
+                startGame();
+            } else {
+                System.exit(0);
+            }
+        } else {
+            resetGame();
+        }
     }
 
     private void resetGame() {
         playerHand = new Hand();
         dealerHand = new Hand();
         startGame();
+    }
+
+    private boolean outOfMoney() {
+        return balance<=0;
     }
 
     public static void main(String[] args) {

@@ -34,6 +34,9 @@ public class Hand {
         return value;
     }
 
+    public void clear() {
+        cards.clear();
+    }
     public boolean isTurnOver() {
         return getValue() >= 17;
     }
