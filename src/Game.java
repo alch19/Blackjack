@@ -20,18 +20,27 @@ public class Game extends JFrame {
         dealerHand = new Hand();
         
         setTitle("Blackjack");
-        setSize(600, 400);
+        setSize(600,600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+
+        JPanel handsPanel = new JPanel();
+        handsPanel.setLayout(new GridLayout(2, 1));
 
         playerHandPanel = new JPanel();
         playerHandPanel.setPreferredSize(new Dimension(600, 150));
         playerHandPanel.setLayout(new FlowLayout());
+        playerHandPanel.setBorder(BorderFactory.createTitledBorder("Player Hand"));
 
         dealerHandPanel = new JPanel();
         dealerHandPanel.setPreferredSize(new Dimension(600, 150));
         dealerHandPanel.setLayout(new FlowLayout());
+        dealerHandPanel.setBorder(BorderFactory.createTitledBorder("Dealer Hand"));
+
+        handsPanel.add(playerHandPanel);
+        handsPanel.add(dealerHandPanel);
 
         hitButton = new JButton("Hit");
         standButton = new JButton("Stand");
@@ -50,14 +59,13 @@ public class Game extends JFrame {
             }
         });
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(1, 2));
-        panel.add(hitButton);
-        panel.add(standButton);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(1, 2));
+        buttonPanel.add(hitButton);
+        buttonPanel.add(standButton);
 
-        add(dealerHandPanel, BorderLayout.NORTH);
-        add(playerHandPanel, BorderLayout.CENTER);
-        add(panel, BorderLayout.SOUTH);
+        add(handsPanel, BorderLayout.WEST);
+        add(buttonPanel, BorderLayout.SOUTH);
 
         startGame();
     }
