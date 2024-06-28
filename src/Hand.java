@@ -34,6 +34,10 @@ public class Hand {
         return value;
     }
 
+    public boolean isTurnOver() {
+        return getValue() >= 17;
+    }
+
     public boolean isBust() {
         return getValue() > 21;
     }

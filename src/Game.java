@@ -13,6 +13,7 @@ public class Game extends JFrame {
     private JPanel dealerHandPanel;
     private JButton hitButton;
     private JButton standButton;
+    private boolean dealerCardRevealed = false;
 
     public Game() {
         deck = new Deck();
@@ -76,7 +77,9 @@ public class Game extends JFrame {
         playerHand.addCard(deck.dealCard());
         playerHand.addCard(deck.dealCard());
         dealerHand.addCard(deck.dealCard());
-        dealerHand.addCard(deck.dealCard());
+        Card secondDealerCard = deck.dealCard();
+        secondDealerCard.setHidden(true);
+        dealerHand.addCard(secondDealerCard);
 
         updateUI();
     }
@@ -92,7 +95,7 @@ public class Game extends JFrame {
         List<Card> dealerCards = dealerHand.getCards();
         for (int i = 0; i < dealerCards.size(); i++) {
             CardPanel cardPanel = new CardPanel(dealerCards.get(i));
-            if (i == 1) {
+            if (i == 1 && dealerCards.get(i).isHidden()) {
                 cardPanel.setHidden(true);
             }
             dealerHandPanel.add(cardPanel);
@@ -104,6 +107,8 @@ public class Game extends JFrame {
         dealerHandPanel.repaint();
     }
 
+
+
     private void updateUI(int i) {
         playerHandPanel.removeAll();
         dealerHandPanel.removeAll();
@@ -113,7 +118,11 @@ public class Game extends JFrame {
         }
 
         for (Card card : dealerHand.getCards()) {
-            dealerHandPanel.add(new CardPanel(card));
+            CardPanel cardPanel = new CardPanel(card);
+            if (card.isHidden()) {
+                cardPanel.setHidden(false);
+            }
+            dealerHandPanel.add(cardPanel);
         }
 
         playerHandPanel.revalidate();
@@ -121,6 +130,7 @@ public class Game extends JFrame {
         dealerHandPanel.revalidate();
         dealerHandPanel.repaint();
     }
+
 
     private void playerHit() {
         playerHand.addCard(deck.dealCard());
@@ -134,15 +144,36 @@ public class Game extends JFrame {
 
     private void playerStand() {
         dealerTurn();
-        determineOutcome();
     }
 
     private void dealerTurn() {
-        while (dealerHand.getValue() < 17) {
-            dealerHand.addCard(deck.dealCard());
-            updateUI(1);
-        }
+        dealerCardRevealed = false;
+
+        Timer timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!dealerCardRevealed) {
+                    revealDealerSecondCard();
+                    dealerCardRevealed = true;
+                } else if (dealerHand.getValue() < 17) {
+                    dealerHand.addCard(deck.dealCard());
+                    updateUI(1);
+                } else {
+                    ((Timer) e.getSource()).stop();
+                    determineOutcome();
+                }
+            }
+        });
+        timer.setInitialDelay(0);
+        timer.start();
     }
+
+    private void revealDealerSecondCard() {
+        dealerHand.getCards().get(1).setHidden(false);
+        updateUI();
+    }
+
+
 
     private void determineOutcome() {
         int playerValue = playerHand.getValue();
