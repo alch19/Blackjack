@@ -18,6 +18,7 @@ public class Game extends JFrame {
     private int balance = 1000;
     private JLabel balanceLabel;
     private int bet;
+    private JButton splitButton;
 
     private boolean dealerCardRevealed = false;
 
@@ -61,6 +62,7 @@ public class Game extends JFrame {
 
         hitButton = new JButton("Hit");
         standButton = new JButton("Stand");
+        splitButton = new JButton("Split");
 
         hitButton.addActionListener(new ActionListener() {
             @Override
@@ -76,10 +78,18 @@ public class Game extends JFrame {
             }
         });
 
+        splitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                playerSplit();
+            }
+        });
+
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(1, 2));
+        buttonPanel.setLayout(new GridLayout(1, 3));
         buttonPanel.add(hitButton);
         buttonPanel.add(standButton);
+        buttonPanel.add(splitButton);
 
         playerTotalValueLabel = new JLabel("Player Total: 0");
         dealerTotalValueLabel = new JLabel("Dealer Total: 0");
@@ -87,10 +97,15 @@ public class Game extends JFrame {
         playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
         dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
+        hitButton.setFocusable(false);
+        standButton.setFocusable(false);
+        splitButton.setFocusable(false);
+
+        splitButton.setEnabled(false);
+
         add(balancePanel, BorderLayout.NORTH);
         add(handsPanel, BorderLayout.WEST);
         add(buttonPanel, BorderLayout.SOUTH);
-
         startGame();
     }
 
@@ -122,6 +137,7 @@ public class Game extends JFrame {
         dealerHand.addCard(secondDealerCard);
 
         updateUI();
+        updateSplitButtonState();
     }
 
     private void updateUI() {
@@ -187,7 +203,8 @@ public class Game extends JFrame {
     private void playerHit() {
         playerHand.addCard(deck.dealCard());
         updateUI();
-
+        updateSplitButtonState();
+        
         if (playerHand.isBust()) {
             JOptionPane.showMessageDialog(this, "Player busts! Dealer wins.");
             balance-=bet;
@@ -267,6 +284,48 @@ public class Game extends JFrame {
             resetGame();
         }
     }
+
+    private void playerSplit() {
+        if (playerHand.getCards().size() == 2 && playerHand.getCards().get(0).getValue() == playerHand.getCards().get(1).getValue()) {
+            Hand splitHand = new Hand();
+            splitHand.addCard(playerHand.getCards().remove(1));
+            playerHand.addCard(deck.dealCard());
+            splitHand.addCard(deck.dealCard());
+
+            playerHandPanel.removeAll();
+            JPanel originalHandPanel = new JPanel(new FlowLayout());
+            originalHandPanel.setBorder(BorderFactory.createTitledBorder("Original Hand"));
+            for (Card card : playerHand.getCards()) {
+                originalHandPanel.add(new CardPanel(card));
+            }
+            playerHandPanel.add(originalHandPanel);
+
+            JPanel splitHandPanel = new JPanel(new FlowLayout());
+            splitHandPanel.setBorder(BorderFactory.createTitledBorder("Split Hand"));
+            for (Card card : splitHand.getCards()) {
+                splitHandPanel.add(new CardPanel(card));
+            }
+            playerHandPanel.add(splitHandPanel);
+
+            playerTotalValueLabel.setText("Original Hand Total: " + playerHand.getValue());
+            JLabel splitHandValueLabel = new JLabel("Split Hand Total: " + splitHand.getValue());
+            splitHandPanel.add(splitHandValueLabel, BorderLayout.SOUTH);
+
+            playerHandPanel.revalidate();
+            playerHandPanel.repaint();
+        } else {
+            JOptionPane.showMessageDialog(this, "You can only split if your first two cards are of the same value.", "Cannot Split", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateSplitButtonState() {
+        if (playerHand.getCards().size() == 2 && playerHand.getCards().get(0).getValue() == playerHand.getCards().get(1).getValue()) {
+            splitButton.setEnabled(true);
+        } else {
+            splitButton.setEnabled(false);
+        }
+    }
+
 
     private void resetGame() {
         playerHand = new Hand();
