@@ -40,7 +40,6 @@ public class Hand {
     public boolean isTurnOver() {
         return getValue() >= 17;
     }
-
     public boolean isBust() {
         return getValue() > 21;
     }

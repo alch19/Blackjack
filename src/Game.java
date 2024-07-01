@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -19,6 +20,9 @@ public class Game extends JFrame {
     private JLabel balanceLabel;
     private int bet;
     private JButton splitButton;
+    private List<Hand> splitHands;
+    private List<Integer> bets;
+    private int currentHandIndex;
 
     private boolean dealerCardRevealed = false;
 
@@ -26,6 +30,8 @@ public class Game extends JFrame {
         deck = new Deck();
         playerHand = new Hand();
         dealerHand = new Hand();
+        splitHands = new ArrayList<>();
+        bets = new ArrayList<>();
         
         setTitle("Blackjack");
         setSize(600,600);
@@ -129,12 +135,18 @@ public class Game extends JFrame {
         playerHand.clear();
         dealerHand.clear();
 
+        splitHands.clear();
+        bets.clear();
+
         playerHand.addCard(deck.dealCard());
         playerHand.addCard(deck.dealCard());
         dealerHand.addCard(deck.dealCard());
         Card secondDealerCard = deck.dealCard();
         secondDealerCard.setHidden(true);
         dealerHand.addCard(secondDealerCard);
+
+        bets.add(bet);
+        currentHandIndex = 0;
 
         updateUI();
         updateSplitButtonState();
@@ -144,30 +156,46 @@ public class Game extends JFrame {
         playerHandPanel.removeAll();
         dealerHandPanel.removeAll();
 
+        JPanel playerCardsPanel = new JPanel(new FlowLayout());
         for (Card card : playerHand.getCards()) {
-            playerHandPanel.add(new CardPanel(card));
+            playerCardsPanel.add(new CardPanel(card));
+        }
+        playerHandPanel.add(playerCardsPanel, BorderLayout.CENTER);
+        playerHandPanel.add(playerTotalValueLabel, BorderLayout.SOUTH);
+
+        for (int i = 0; i < splitHands.size(); i++) {
+            Hand splitHand = splitHands.get(i);
+            JPanel splitHandPanel = new JPanel(new FlowLayout());
+            splitHandPanel.setBorder(BorderFactory.createTitledBorder("Split Hand " + (i + 1)));
+            for (Card card : splitHand.getCards()) {
+                splitHandPanel.add(new CardPanel(card));
+            }
+            JLabel splitHandValueLabel = new JLabel("Split Hand " + (i + 1) + " Total: " + splitHand.getValue());
+            splitHandPanel.add(splitHandValueLabel, BorderLayout.SOUTH);
+            playerHandPanel.add(splitHandPanel);
         }
 
         List<Card> dealerCards = dealerHand.getCards();
+        JPanel dealerCardsPanel = new JPanel(new FlowLayout());
         for (int i = 0; i < dealerCards.size(); i++) {
             CardPanel cardPanel = new CardPanel(dealerCards.get(i));
             if (i == 1 && dealerCards.get(i).isHidden()) {
                 cardPanel.setHidden(true);
             }
-            dealerHandPanel.add(cardPanel);
+            dealerCardsPanel.add(cardPanel);
         }
+        dealerHandPanel.add(dealerCardsPanel, BorderLayout.CENTER);
+        dealerHandPanel.add(dealerTotalValueLabel, BorderLayout.SOUTH);
 
         playerTotalValueLabel.setText("Player Total: " + playerHand.getValue());
         dealerTotalValueLabel.setText("Dealer Total: " + (dealerCards.get(1).isHidden() ? dealerHand.getCards().get(0).getValue() : dealerHand.getValue()));
-
-        playerHandPanel.add(playerTotalValueLabel);
-        dealerHandPanel.add(dealerTotalValueLabel);
 
         playerHandPanel.revalidate();
         playerHandPanel.repaint();
         dealerHandPanel.revalidate();
         dealerHandPanel.repaint();
     }
+
 
 
 
@@ -225,7 +253,12 @@ public class Game extends JFrame {
     }
 
     private void playerStand() {
-        dealerTurn();
+        if (currentHandIndex < splitHands.size()) {
+            currentHandIndex++;
+            updateUI();
+        } else {
+            dealerTurn();
+        }
     }
 
     private void dealerTurn() {
@@ -260,30 +293,36 @@ public class Game extends JFrame {
         int dealerValue = dealerHand.getValue();
 
         String message;
+        int totalWinnings = 0;
+        int totalLosses = 0;
+
         if (dealerHand.isBust() || (playerValue > dealerValue)) {
             message = "Player wins!";
-            balance+=bet;
+            totalWinnings += bets.get(0);
         } else if (playerValue < dealerValue) {
             message = "Dealer wins!";
-            balance-=bet;
+            totalLosses += bets.get(0);
         } else {
             message = "It's a tie!";
         }
-        balanceLabel.setText("Balance: " + balance);
-        JOptionPane.showMessageDialog(this, message);
-        if(outOfMoney()) {
-            int response = JOptionPane.showConfirmDialog(this, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if (response == JOptionPane.YES_OPTION) {
-                balance = 1000;
-                balanceLabel.setText("Balance: " + balance);
-                startGame();
-            } else {
-                System.exit(0);
+
+        for (int i = 0; i < splitHands.size(); i++) {
+            Hand splitHand = splitHands.get(i);
+            int splitHandValue = splitHand.getValue();
+            if (dealerHand.isBust() || (splitHandValue > dealerValue)) {
+                totalWinnings += bets.get(i + 1);
+            } else if (splitHandValue < dealerValue) {
+                totalLosses += bets.get(i + 1);
             }
-        } else {
-            resetGame();
         }
+
+        balance += totalWinnings - totalLosses;
+        balanceLabel.setText("Balance: " + balance);
+
+        JOptionPane.showMessageDialog(this, message);
+        resetGame();
     }
+
 
     private void playerSplit() {
         if (playerHand.getCards().size() == 2 && playerHand.getCards().get(0).getValue() == playerHand.getCards().get(1).getValue()) {
@@ -292,31 +331,17 @@ public class Game extends JFrame {
             playerHand.addCard(deck.dealCard());
             splitHand.addCard(deck.dealCard());
 
-            playerHandPanel.removeAll();
-            JPanel originalHandPanel = new JPanel(new FlowLayout());
-            originalHandPanel.setBorder(BorderFactory.createTitledBorder("Original Hand"));
-            for (Card card : playerHand.getCards()) {
-                originalHandPanel.add(new CardPanel(card));
-            }
-            playerHandPanel.add(originalHandPanel);
+            splitHands.add(splitHand);
+            bets.add(bet);
 
-            JPanel splitHandPanel = new JPanel(new FlowLayout());
-            splitHandPanel.setBorder(BorderFactory.createTitledBorder("Split Hand"));
-            for (Card card : splitHand.getCards()) {
-                splitHandPanel.add(new CardPanel(card));
-            }
-            playerHandPanel.add(splitHandPanel);
-
-            playerTotalValueLabel.setText("Original Hand Total: " + playerHand.getValue());
-            JLabel splitHandValueLabel = new JLabel("Split Hand Total: " + splitHand.getValue());
-            splitHandPanel.add(splitHandValueLabel, BorderLayout.SOUTH);
-
-            playerHandPanel.revalidate();
-            playerHandPanel.repaint();
+            updateUI();
+            updateSplitButtonState();
         } else {
             JOptionPane.showMessageDialog(this, "You can only split if your first two cards are of the same value.", "Cannot Split", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+
 
     private void updateSplitButtonState() {
         if (playerHand.getCards().size() == 2 && playerHand.getCards().get(0).getValue() == playerHand.getCards().get(1).getValue()) {
@@ -330,8 +355,12 @@ public class Game extends JFrame {
     private void resetGame() {
         playerHand = new Hand();
         dealerHand = new Hand();
+        splitHands.clear();
+        bets.clear();
+        currentHandIndex = 0;
         startGame();
     }
+
 
     private boolean outOfMoney() {
         return balance<=0;
